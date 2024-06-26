@@ -16,7 +16,7 @@ public interface PostService {
 
     PostDto getPostById(Long id);
 
-    PostDto updateById(Long id, PostDto postDto);
+    PostDto updateById(Long id, PostDto postDto, MultipartFile file) throws IOException;
 
     void deleteById(Long id) throws IOException;
 

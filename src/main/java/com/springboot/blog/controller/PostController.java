@@ -115,8 +115,13 @@ public class PostController {
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/api/v1/posts/{id}")
     // UPDATE
-    public ResponseEntity<PostDto> updateById(@PathVariable("id") Long id,@Valid @RequestBody PostDto postDto) {
-        PostDto newPostDto = postService.updateById(id, postDto);
+    public ResponseEntity<PostDto> updateById(@PathVariable("id") Long id,
+                                              @RequestPart MultipartFile file,
+                                              @RequestPart String postDto
+                                              ) throws IOException{
+        PostDto dto = convertToMovieDto(postDto);
+
+        PostDto newPostDto = postService.updateById(id, dto, file);
         return ResponseEntity.ok(newPostDto);
     }
 

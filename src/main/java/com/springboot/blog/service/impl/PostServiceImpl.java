@@ -86,10 +86,17 @@ public class PostServiceImpl implements PostService {
 
     // UPDATING BY ID
     @Override
-    public PostDto updateById(Long id, PostDto postDto) {
+    public PostDto updateById(Long id, PostDto postDto, MultipartFile file) throws IOException {
 
         // Getting Post from the database if not find then thorws the exception
         Post post = postRepository.findById(id).orElseThrow(() -> new ResourceNotFountException("Post", " id", id));
+
+        String fileName = post.getImage();
+        if (file != null) {
+            Files.deleteIfExists(Paths.get(path + File.separator + fileName));
+            fileName = fileService.uploadFile(path, file);
+        }
+        postDto.setImage(fileName);
 
         // Getting category from the database if not find then thorws the exception
         Category category = categoryRepository.findById(postDto.getCategoryId())
@@ -101,10 +108,15 @@ public class PostServiceImpl implements PostService {
         post.setTitle(postDto.getTitle());
         post.setDescription(postDto.getDescription());
         post.setContent(postDto.getContent());
+        post.setImage(postDto.getImage());
 
         Post updatePost = postRepository.save(post);
 
-        return mapToDTO(updatePost);
+        String imageUrl = baseUrl + "/image/" + post.getImage();
+        PostDto response = mapToDTO(updatePost);
+        response.setImageUrl(imageUrl);
+
+        return response;
     }
 
     // GETTING ALL
@@ -145,7 +157,6 @@ public class PostServiceImpl implements PostService {
         Post post = postRepository.findById(id).orElseThrow(() -> new ResourceNotFountException("Post", " id", id));
 
 
-
         String imageUrl = baseUrl + "/image/" + post.getImage();
 
 
@@ -156,7 +167,7 @@ public class PostServiceImpl implements PostService {
 
     // DELETING BY ID
     @Override
-    public void deleteById(Long id) throws IOException{
+    public void deleteById(Long id) throws IOException {
         Post post = postRepository.findById(id).orElseThrow(() -> new ResourceNotFountException("Post", " id", id));
 
         Files.deleteIfExists(Paths.get(path + File.separator + post.getImage()));
