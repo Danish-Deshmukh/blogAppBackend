@@ -30,7 +30,7 @@ public class PostController {
         this.postService = postService;
     }
 
-    @Value("${project.poster}")
+    @Value("${project.image}")
     private String path;
 
 
