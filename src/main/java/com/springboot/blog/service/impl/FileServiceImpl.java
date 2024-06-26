@@ -1,12 +1,14 @@
 package com.springboot.blog.service.impl;
 
 import com.springboot.blog.service.FileService;
+import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+@Service
 public class FileServiceImpl implements FileService {
     @Override
     public String uploadFile(String path, MultipartFile file) throws IOException {
