@@ -75,7 +75,8 @@ public class PostServiceImpl implements PostService {
         Post savePost = postRepository.save(post);
 
         // 5. generate the posterUrl
-        String imageUrl = "image/" + uploadedFileName;
+
+        String imageUrl = baseUrl + "/image/" + uploadedFileName;
 
         // 6. converting entity to DTO in the return statement
         PostDto responseDto = mapToDTO(savePost);
@@ -113,9 +114,6 @@ public class PostServiceImpl implements PostService {
         Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name()) ? Sort.by(sortBy).ascending()
                 : Sort.by(sortBy).descending();
 
-//        Sort sort1 = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name()) ? Sort.by(sortDir).ascending()
-//                : Sort.by(sortDir).descending();
-
 
         // creating pageable instance
         Pageable pageable = PageRequest.of(PageNo, PageSize, sort);
@@ -147,7 +145,8 @@ public class PostServiceImpl implements PostService {
         Post post = postRepository.findById(id).orElseThrow(() -> new ResourceNotFountException("Post", " id", id));
 
 
-        String imageUrl = "image/" + post.getImage();
+
+        String imageUrl = baseUrl + "/image/" + post.getImage();
 
 
         PostDto responseDto = mapToDTO(post);
@@ -157,13 +156,12 @@ public class PostServiceImpl implements PostService {
 
     // DELETING BY ID
     @Override
-    public void deleteById(Long id) {
+    public void deleteById(Long id) throws IOException{
         Post post = postRepository.findById(id).orElseThrow(() -> new ResourceNotFountException("Post", " id", id));
 
+        Files.deleteIfExists(Paths.get(path + File.separator + post.getImage()));
+
         postRepository.delete(post);
-
-//        postRepository.deleteById(id);
-
     }
 
     @Override

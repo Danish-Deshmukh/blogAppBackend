@@ -18,7 +18,7 @@ public interface PostService {
 
     PostDto updateById(Long id, PostDto postDto);
 
-    void deleteById(Long id);
+    void deleteById(Long id) throws IOException;
 
     List<PostDto> getPostByCategory(Long categoryId);
 

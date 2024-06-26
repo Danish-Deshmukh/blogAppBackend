@@ -136,7 +136,7 @@ public class PostController {
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/api/v1/posts/{id}")
     // DELETE
-    public ResponseEntity<String> deleteById(@PathVariable("id") Long id) {
+    public ResponseEntity<String> deleteById(@PathVariable("id") Long id) throws IOException {
         postService.deleteById(id);
         return new ResponseEntity<>("deleted successfully", HttpStatus.OK);
     }
