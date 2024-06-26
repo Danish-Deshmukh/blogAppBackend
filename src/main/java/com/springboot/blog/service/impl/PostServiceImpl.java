@@ -146,7 +146,13 @@ public class PostServiceImpl implements PostService {
     public PostDto getPostById(Long id) {
         Post post = postRepository.findById(id).orElseThrow(() -> new ResourceNotFountException("Post", " id", id));
 
-        return mapToDTO(post);
+
+        String imageUrl = "image/" + post.getImage();
+
+
+        PostDto responseDto = mapToDTO(post);
+        responseDto.setImageUrl(imageUrl);
+        return responseDto;
     }
 
     // DELETING BY ID
