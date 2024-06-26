@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 @RestController
-@RequestMapping("/file/")
+@RequestMapping("/api/v1")
 public class FileController {
     private final FileService fileService;
 
@@ -37,7 +37,7 @@ public class FileController {
 //        StreamUtils.copy(resourceFile, response.getOutputStream());
 //    }
 
-    @GetMapping(value = "/view/{fileName}")
+    @GetMapping(value = "/image/{fileName}")
     public void serveFileHandler(@PathVariable String fileName, HttpServletResponse response) throws IOException {
         InputStream resourceFile = fileService.getResourceFile(path, fileName);
 

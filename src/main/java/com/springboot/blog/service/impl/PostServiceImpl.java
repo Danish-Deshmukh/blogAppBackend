@@ -7,14 +7,22 @@ import com.springboot.blog.payload.PostDto;
 import com.springboot.blog.payload.PostResponse;
 import com.springboot.blog.repository.CategoryRepository;
 import com.springboot.blog.repository.PostRepository;
+import com.springboot.blog.service.FileService;
 import com.springboot.blog.service.PostService;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -24,34 +32,55 @@ public class PostServiceImpl implements PostService {
     private final PostRepository postRepository;
     private final ModelMapper modelMapper;
     private final CategoryRepository categoryRepository;
+    private final FileService fileService;
+
+    @Value("${project.image}")
+    private String path;
+
+    @Value("${base.url}")
+    private String baseUrl;
 
     public PostServiceImpl(PostRepository postRepository,
                            ModelMapper modelMapper,
-                           CategoryRepository categoryRepository) {
+                           CategoryRepository categoryRepository, FileService fileService) {
 
         this.postRepository = postRepository;
         this.modelMapper = modelMapper;
         this.categoryRepository = categoryRepository;
+        this.fileService = fileService;
     }
 
 
     // CREATING
     @Override
-    public PostDto createPost(PostDto postDto) {
+    public PostDto createPost(PostDto postDto, MultipartFile file) throws IOException {
+        // 1. upload the file
+        if (Files.exists(Paths.get(path + File.separator + file.getOriginalFilename()))) {
+            throw new FileAlreadyExistsException("File already exists! Please enter another file name!");
+        }
+        String uploadedFileName = fileService.uploadFile(path, file);
+
+        // 2. set the value of field 'poster' as filename
+        postDto.setImage(uploadedFileName);
 
         // Getting Category from the database
         Category category = categoryRepository.findById(postDto.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFountException("Category not found ", " with id :", postDto.getCategoryId()));
 
-        // converting DTO to Entity
+        // 3. converting DTO to Entity
         Post post = mapToEntity(postDto);
         post.setCategory(category);
 
-        // below move is for saving the data into databases using JPA
-        Post newPost = postRepository.save(post);
+        // 4. below move is for saving the data into databases using JPA
+        Post savePost = postRepository.save(post);
 
-        // converting entity to DTO in the return statement
-        return mapToDTO(newPost);
+        // 5. generate the posterUrl
+        String imageUrl = "image/" + uploadedFileName;
+
+        // 6. converting entity to DTO in the return statement
+        PostDto responseDto = mapToDTO(savePost);
+        responseDto.setImageUrl(imageUrl);
+        return responseDto;
     }
 
     // UPDATING BY ID
@@ -60,12 +89,12 @@ public class PostServiceImpl implements PostService {
 
         // Getting Post from the database if not find then thorws the exception
         Post post = postRepository.findById(id).orElseThrow(() -> new ResourceNotFountException("Post", " id", id));
-        
+
         // Getting category from the database if not find then thorws the exception
         Category category = categoryRepository.findById(postDto.getCategoryId())
-        .orElseThrow(() -> new ResourceNotFountException("Category not found",
-         " with the id ", postDto.getCategoryId()));
-        
+                .orElseThrow(() -> new ResourceNotFountException("Category not found",
+                        " with the id ", postDto.getCategoryId()));
+
         post.setCategory(category);
         post.setId(id);
         post.setTitle(postDto.getTitle());
@@ -81,15 +110,15 @@ public class PostServiceImpl implements PostService {
     @Override
     public PostResponse getAllPost(int PageSize, int PageNo, String sortBy, String sortDir) {
 
-        Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name())?Sort.by(sortBy).ascending()
-                :Sort.by(sortBy).descending();
+        Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name()) ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
 
 //        Sort sort1 = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name()) ? Sort.by(sortDir).ascending()
 //                : Sort.by(sortDir).descending();
 
 
         // creating pageable instance
-        Pageable pageable = PageRequest.of(PageNo,PageSize,sort);
+        Pageable pageable = PageRequest.of(PageNo, PageSize, sort);
         Page<Post> posts = postRepository.findAll(pageable);
 
         // getting content for page object
@@ -116,7 +145,7 @@ public class PostServiceImpl implements PostService {
     @Override
     public PostDto getPostById(Long id) {
         Post post = postRepository.findById(id).orElseThrow(() -> new ResourceNotFountException("Post", " id", id));
-        
+
         return mapToDTO(post);
     }
 
@@ -130,12 +159,12 @@ public class PostServiceImpl implements PostService {
 //        postRepository.deleteById(id);
 
     }
-     
+
     @Override
     public List<PostDto> getPostByCategory(Long categoryId) {
-    
+
         categoryRepository.findById(categoryId)
-        .orElseThrow(() -> new ResourceNotFountException("this Category is not found ", " with id ", categoryId));
+                .orElseThrow(() -> new ResourceNotFountException("this Category is not found ", " with id ", categoryId));
 
         List<Post> posts = postRepository.findByCategoryId(categoryId);
 
@@ -146,7 +175,7 @@ public class PostServiceImpl implements PostService {
     // method is for converting entity to DTO
     private PostDto mapToDTO(Post post) {
 
-        PostDto postDto = modelMapper.map(post,PostDto.class);
+        PostDto postDto = modelMapper.map(post, PostDto.class);
 
 //        PostDto postDto = new PostDto();
 //        postDto.setId(post.getId());
@@ -161,7 +190,7 @@ public class PostServiceImpl implements PostService {
     // this method is for converting DTO to Entity
     private Post mapToEntity(PostDto postDto) {
 
-        Post post = modelMapper.map(postDto,Post.class);
+        Post post = modelMapper.map(postDto, Post.class);
 
 //        Post post = new Post();
 //        post.setTitle(postDto.getTitle());
@@ -171,6 +200,4 @@ public class PostServiceImpl implements PostService {
         return post;
     }
 
-
-    
 }

@@ -1,5 +1,7 @@
 package com.springboot.blog.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.springboot.blog.payload.PostDto;
 import com.springboot.blog.payload.PostResponse;
 import com.springboot.blog.service.PostService;
@@ -15,6 +17,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 //    http://localhost:8080/api/v1/posts
 @CrossOrigin("*")
@@ -48,8 +54,14 @@ public class PostController {
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/api/v1/posts")
     // CREATE
-    public ResponseEntity<PostDto> createPost(@Valid @RequestBody PostDto postDto) {
-        return new ResponseEntity<>(postService.createPost(postDto), HttpStatus.CREATED);
+    public ResponseEntity<PostDto> createPost(@RequestPart MultipartFile file,
+                                              @RequestPart String postDto) throws IOException {
+        PostDto dto = convertToMovieDto(postDto);
+        return new ResponseEntity<>(postService.createPost(dto, file), HttpStatus.CREATED);
+    }
+    private PostDto convertToMovieDto(String movieDtoObj) throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        return objectMapper.readValue(movieDtoObj, PostDto.class);
     }
 
 

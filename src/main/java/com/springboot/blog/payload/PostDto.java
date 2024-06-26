@@ -42,4 +42,8 @@ public class PostDto {
     private Long categoryId;
 
     private Set<CommentDto> comments;
+
+    private String image;
+
+    private String imageUrl;
 }
