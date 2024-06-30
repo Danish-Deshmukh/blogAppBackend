@@ -119,8 +119,8 @@ public class PostController {
                                               @RequestPart MultipartFile file,
                                               @RequestPart String postDto
                                               ) throws IOException{
+        if (file.isEmpty()) file = null;
         PostDto dto = convertToMovieDto(postDto);
-
         PostDto newPostDto = postService.updateById(id, dto, file);
         return ResponseEntity.ok(newPostDto);
     }
