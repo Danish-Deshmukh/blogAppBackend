@@ -116,10 +116,12 @@ public class PostController {
     @PutMapping("/api/v1/posts/{id}")
     // UPDATE
     public ResponseEntity<PostDto> updateById(@PathVariable("id") Long id,
-                                              @RequestPart MultipartFile file,
+                                              @RequestPart(required = false) MultipartFile file,
                                               @RequestPart String postDto
                                               ) throws IOException{
-        if (file.isEmpty()) file = null;
+        if (file != null && file.isEmpty()) {
+            file = null;
+        }
         PostDto dto = convertToMovieDto(postDto);
         PostDto newPostDto = postService.updateById(id, dto, file);
         return ResponseEntity.ok(newPostDto);
